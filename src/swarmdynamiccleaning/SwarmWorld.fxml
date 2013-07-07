@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.collections.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane id="AnchorPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="602.0" prefWidth="808.0" xmlns:fx="http://javafx.com/fxml" fx:controller="swarmdynamiccleaning.SwarmWorldController">
+  <children>
+    <SplitPane dividerPositions="0.2518610421836228" focusTraversable="true" prefHeight="500.0" prefWidth="700.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+      <items>
+        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="498.0" prefWidth="200.0">
+          <children>
+            <Label layoutX="42.0" layoutY="108.0" text="Agents #:" />
+            <Button id="btnStart" fx:id="btnStartPause" layoutX="104.0" layoutY="50.0" mnemonicParsing="false" onAction="#handleStartPauseButtonAction" prefHeight="52.0" prefWidth="86.0" text="Start" />
+            <Button fx:id="btnRefresh" layoutX="18.0" layoutY="50.0" mnemonicParsing="false" onAction="#handleRefreshButtonAction" prefHeight="52.0" prefWidth="73.0" text="Refresh" />
+            <Label id="txtAgentsWidth" layoutX="20.0" layoutY="140.0" text="Agents width:" />
+            <Slider id="slrFPS" fx:id="slrFps" layoutX="104.0" layoutY="211.0" max="25.0" min="1.0" prefWidth="85.99990000000253" value="10.0" />
+            <Label layoutX="24.0" layoutY="212.0" text="Speed (FPS):" />
+            <Label id="lblFPS" fx:id="lblFps" layoutX="144.0" layoutY="224.0" text="10" />
+            <Label layoutX="34.0" layoutY="182.0" text="Show grid:" />
+            <CheckBox fx:id="chkGrid" layoutX="105.0" layoutY="182.0" mnemonicParsing="false" onAction="#handleChkGridAction" selected="true" />
+            <Label fx:id="lblFilledSpace" layoutX="103.0" layoutY="578.0" prefWidth="26.0" />
+            <Label layoutX="8.0" layoutY="578.0" text="Filled space (%):" />
+            <Label layoutX="40.0" layoutY="553.0" text="Iterations:" />
+            <Label fx:id="lblExecutedFrames" layoutX="103.0" layoutY="553.0" />
+            <Label layoutX="8.0" layoutY="284.0" text="Personal range:" />
+            <Label layoutX="9.0" layoutY="320.0" text="Comfort range:" />
+            <Label layoutX="26.0" layoutY="353.0" text="Flock range:" />
+            <Label layoutX="40.0" layoutY="389.0" text="Step size:" />
+            <Separator layoutY="275.0" prefWidth="194.0" />
+            <Slider fx:id="slrPersonalRange" layoutX="104.0" layoutY="286.0" prefWidth="86.0" value="15.0" />
+            <Slider fx:id="slrComfortRange" layoutX="104.0" layoutY="322.0" prefWidth="86.0" />
+            <Slider fx:id="slrFlockRange" layoutX="105.0" layoutY="354.0" prefWidth="85.00009999999747" value="40.0" />
+            <Slider id="slrWalkDistance" fx:id="slrStepSize" layoutX="105.0" layoutY="390.0" max="10.0" min="1.0" prefWidth="86.0" value="5.0" />
+            <Label fx:id="lblPersonalRange" layoutX="134.0" layoutY="300.0" prefWidth="26.0" text="15" />
+            <Label fx:id="lblComfortRange" layoutX="134.0" layoutY="335.0" prefWidth="26.0" text="0" />
+            <Label fx:id="lblFlockRange" layoutX="132.0" layoutY="369.0" prefWidth="26.0" text="40" />
+            <Label id="lblWalkDistance" fx:id="lblStepSize" layoutX="135.0" layoutY="406.0" prefWidth="26.0" text="5" />
+            <Separator layoutX="3.0" layoutY="172.0" prefWidth="194.0" />
+            <Label layoutX="5.0" layoutY="421.0" text="Pheromone (%):" />
+            <Label layoutX="6.0" layoutY="240.0" text="Evaporation (%):" />
+            <Slider fx:id="slrPheromone" layoutX="105.0" layoutY="423.0" prefWidth="86.0" value="15.0" />
+            <Slider fx:id="slrEvaporation" layoutX="104.0" layoutY="242.0" prefWidth="86.0" value="2.0" />
+            <Label id="lblWalkDistance" fx:id="lblPheromone" layoutX="134.0" layoutY="435.0" prefWidth="26.0" text="15" />
+            <Label id="lblWalkDistance" fx:id="lblEvaporation" layoutX="135.0" layoutY="256.0" prefWidth="26.0" text="3" />
+            <Slider id="slrFPS" fx:id="slrAgentsNumber" layoutX="105.0" layoutY="110.0" max="80.0" min="1.0" prefWidth="85.00009999999747" value="50.0" />
+            <Slider id="slrFPS" fx:id="slrAgentsWidth" layoutX="105.0" layoutY="142.0" max="10.0" min="3.0" prefWidth="85.00009999999747" value="3.0" />
+            <Label id="lblFPS" fx:id="lblAgentsWidth" layoutX="144.0" layoutY="156.0" text="3" />
+            <Label id="lblFPS" fx:id="lblAgentsNumber" layoutX="144.0" layoutY="124.0" text="50" />
+            <Label layoutX="18.0" layoutY="458.0" text="Influence (%):" />
+            <Slider id="slrPheromone" fx:id="slrInfluence" layoutX="105.0" layoutY="459.0" min="-100.0" prefWidth="86.0" value="10.0" />
+            <Label id="lblWalkDistance" fx:id="lblInfluence" layoutX="137.0" layoutY="471.0" prefWidth="26.0" text="10" />
+            <Label layoutX="33.0" layoutY="494.0" text="Inertia (%):" />
+            <Slider id="slrPheromone" fx:id="slrInertia" layoutX="105.0" layoutY="493.0" prefWidth="86.0" />
+            <Label id="lblWalkDistance" fx:id="lblInertia" layoutX="137.0" layoutY="505.0" prefWidth="26.0" text="0" />
+            <ComboBox fx:id="cbWorlds" layoutX="18.0" layoutY="14.0" prefHeight="24.0" prefWidth="172.0">
+              <items>
+                <FXCollections fx:factory="observableArrayList">
+                  <String fx:value="Item 1" />
+                  <String fx:value="Item 2" />
+                  <String fx:value="Item 3" />
+                </FXCollections>
+              </items>
+            </ComboBox>
+            <Separator layoutX="3.0" layoutY="550.0" prefWidth="194.0" />
+          </children>
+        </AnchorPane>
+        <AnchorPane fx:id="worldPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="0.0" minWidth="0.0" onMouseDragged="#onMouseDragged" onMousePressed="#onMousePressed" onMouseReleased="#onMouseReleased" prefHeight="600.0" prefWidth="600.0" />
+      </items>
+    </SplitPane>
+  </children>
+</AnchorPane>

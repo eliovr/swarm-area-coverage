@@ -46,6 +46,8 @@ public abstract class SwarmWorld implements IAgentWorld, ICellWorld{
     // List of worlds that are loaded from the "worlds.txt" file and can be displayed.
     private ArrayList<World> worlds;
     
+    private int filledCells;
+    
     /** Starts the game.
      * Initializes elements if ran for the first time. No need to call anything else 
      * before this but be sure to implement the abstract methods (needed params are taken from them).
@@ -101,8 +103,10 @@ public abstract class SwarmWorld implements IAgentWorld, ICellWorld{
                     cells[i][j] = new GridCell( GridCell.CELL_SIZE, new Point2D( i*GridCell.CELL_SIZE, j*GridCell.CELL_SIZE ), this );
                     this.cellsGroup.getChildren().add(cells[i][j].getCell());
                 }
-                else
+                else{
                     cells[i][j].setState(GridCell.BLANK);
+                    cells[i][j].setVisited(false);
+                }
             }
         }
         
@@ -113,6 +117,7 @@ public abstract class SwarmWorld implements IAgentWorld, ICellWorld{
         initAgents();
         
         iterations = 0;
+        filledCells = 0;
     }
     
     /** Here is initialized the main loop of the game. 
@@ -182,8 +187,11 @@ public abstract class SwarmWorld implements IAgentWorld, ICellWorld{
             // Live minions!
             agent.act();
         }
+        
+        int filledPercentage = (filledCells * 100) / (cells.length * cells[0].length);
+        
         // Update how much space has been filled.
-//        updateFilledSpace(swarmGrid.getFilledPercentage());
+        updateFilledSpace(filledPercentage);
     }
     
     /** Update every cell.
@@ -333,6 +341,12 @@ public abstract class SwarmWorld implements IAgentWorld, ICellWorld{
     public void dropPheromones(Circle area, double pher){
         // Drop pheromones (or cleaning product) over the following cells...
         for (GridCell cell : getCellsInArea(area)) {
+            
+            if (!cell.isVisited()){
+                cell.setVisited(true);
+                filledCells++;
+            }
+            
             // if the cell is contaminatedd (leak) then
             if (cell.isLeak()){
                 double diff = pher - cell.getAmount();

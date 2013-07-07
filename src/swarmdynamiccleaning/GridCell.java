@@ -21,7 +21,7 @@ public class GridCell extends Atom{
     
     public static final int CELL_SIZE = 5;
     
-    private Node cell;
+    private Rectangle cell;
     
     private byte state;
     
@@ -31,11 +31,14 @@ public class GridCell extends Atom{
     
     private ICellWorld world;
     
+    private boolean visited;
+    
     public GridCell(double size, Point2D position, ICellWorld world){
         this.position = position;
         this.cell = Utils.drawRectangle(position, size);
         this.amount = 0.0;
         this.world = world;
+        this.visited = false;
         setState(BLANK);
     }
     
@@ -97,16 +100,16 @@ public class GridCell extends Atom{
         
         switch (state){
             case WALL: 
-                ((Rectangle)cell).setFill(Color.BLACK);
+                cell.setFill(Color.BLACK);
                 cell.setOpacity(1.0);
                 break;
             case BLANK:
                 cell.setOpacity(0.0);
             case PHERMONE:
-                ((Rectangle)cell).setFill(Color.LIGHTSEAGREEN);
+                cell.setFill(Color.LIGHTSEAGREEN);
                 break;
             case LEAK:
-                ((Rectangle)cell).setFill(Color.GRAY);
+                cell.setFill(Color.GRAY);
                 break;
         }
     }
@@ -128,8 +131,8 @@ public class GridCell extends Atom{
     
     public JSONObject toJSON(){
         JSONObject obj = new JSONObject();
-        obj.put("x", getPosition().getX());
-        obj.put("y", getPosition().getY());
+        obj.put("x", position.getX());
+        obj.put("y", position.getY());
         return obj;
     }
 
@@ -138,5 +141,19 @@ public class GridCell extends Atom{
      */
     public Point2D getPosition() {
         return position;
+    }
+
+    /**
+     * @return the visited
+     */
+    public boolean isVisited() {
+        return visited;
+    }
+
+    /**
+     * @param visited the visited to set
+     */
+    public void setVisited(boolean visited) {
+        this.visited = visited;
     }
 }

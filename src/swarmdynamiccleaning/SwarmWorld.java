@@ -5,6 +5,7 @@
 package swarmdynamiccleaning;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -23,7 +24,7 @@ import javafx.util.Duration;
  */
 public abstract class SwarmWorld implements IAgentWorld, ICellWorld{
     /** Size of each cell of the grid. */
-    public static final int CELL_SIZE = 5, LEAK_AMOUNT = 150;
+    public static final int LEAK_AMOUNT = 150;
     
     // In charged of the main loop.
     private Timeline swarmLoop;
@@ -31,19 +32,18 @@ public abstract class SwarmWorld implements IAgentWorld, ICellWorld{
     private KeyFrame oneFrame;
     // List of agents interacting in the game.
     private ArrayList<Agent> agents;
-    
+    // Matrix of cells. Cells are that part of the world that can be changed
+    // either by the agents or the user.
     private GridCell[][] cells;
-    
+    // Background grid. Placed in a different group so that its visibility can be changed independently.
     private Group gridGroup;
-    
+    // Each cells node of each cell in the cells matrix goes here.
     private Group cellsGroup;
-    // Background grid. 
-//    private SwarmGrid swarmGrid;
     // Keeps track of how many cicles have been executed.
     private int iterations;
     // If the simulation is running or not.
     private boolean running;
-    
+    // List of worlds that are loaded from the "worlds.txt" file and can be displayed.
     private ArrayList<World> worlds;
     
     /** Starts the game.
@@ -76,28 +76,29 @@ public abstract class SwarmWorld implements IAgentWorld, ICellWorld{
         loadSelectedWorld();
     }
     
+    protected boolean isRunning(){
+        return running;
+    }
+    
     /** Initializes all elements. It is also used to reset elements if called for a second time. */
     private void initializeElements(){
-//        leaks = new ArrayList<>();
-        
         if (this.swarmLoop == null)
             initSwarmLoop();
         
         if (this.gridGroup == null)
-            this.gridGroup = Utils.createGrid(getWorldPane().getWidth(), getWorldPane().getHeight(), CELL_SIZE);
+            this.gridGroup = Utils.createGrid(getWorldPane().getWidth(), getWorldPane().getHeight(), GridCell.CELL_SIZE);
         
         if (this.cellsGroup == null)
             this.cellsGroup = new Group();
-//        else
-//            this.cellsGroup.getChildren().clear();
         
         if (this.cells == null)
-            this.cells = new GridCell[(int)(getWorldPane().getWidth()/CELL_SIZE)][(int)(getWorldPane().getHeight()/CELL_SIZE)];
+            this.cells = new GridCell[ (int)(getWorldPane().getWidth()/GridCell.CELL_SIZE) ][ (int)(getWorldPane().getHeight()/GridCell.CELL_SIZE) ];
         
+        // Instantiate or resent each one of the cells.
         for (int i = 0; i < cells.length; i++) {
             for (int j = 0; j < cells[i].length; j++) {
                 if (cells[i][j] == null){
-                    cells[i][j] = new GridCell(CELL_SIZE, new Point2D(i*CELL_SIZE, j*CELL_SIZE), this);
+                    cells[i][j] = new GridCell( GridCell.CELL_SIZE, new Point2D( i*GridCell.CELL_SIZE, j*GridCell.CELL_SIZE ), this );
                     this.cellsGroup.getChildren().add(cells[i][j].getCell());
                 }
                 else
@@ -105,15 +106,9 @@ public abstract class SwarmWorld implements IAgentWorld, ICellWorld{
             }
         }
         
-//        if (swarmGrid == null)
-//            swarmGrid = new SwarmGrid(getWorldPane().getWidth(), getWorldPane().getHeight(), displayGrid(), this);
-//        else
-//            swarmGrid.reset();
-        
         getWorldPane().getChildren().clear();
         getWorldPane().getChildren().add(gridGroup);
         getWorldPane().getChildren().add(cellsGroup);
-//        getWorldPane().getChildren().add(swarmGrid.getGrid());
         
         initAgents();
         
@@ -136,10 +131,6 @@ public abstract class SwarmWorld implements IAgentWorld, ICellWorld{
  
                     updateCells();
                     
-//                    updatePheromones();
-//                    
-//                    updateLeaks();
-                    
                     updateExecutedFrames(++iterations);
                     
 //                    time = Calendar.getInstance().getTimeInMillis() - time;
@@ -147,23 +138,28 @@ public abstract class SwarmWorld implements IAgentWorld, ICellWorld{
             }
         }); 
         
-        setGameLoop(TimelineBuilder.create()
+        this.swarmLoop = TimelineBuilder.create()
                 .cycleCount(Animation.INDEFINITE)
                 .keyFrames(oneFrame)
-                .build());
+                .build();
     }
     
     /** Initialize the agents acting in the game. The number of agents is given by the user.
      */
     private void initAgents(){
-        agents = new ArrayList<>(getNumberOfAgents());
+        int amount = getNumberOfAgents();
+        double size = getAgentsSize();
         
-        for (int i = 0; i < getNumberOfAgents(); i++) {
-            Agent agent = new Agent(getAgentsSize(), this);
+        agents = new ArrayList<>(amount);
+        
+        for (int i = 0; i < amount; i++) {
+            Agent agent = new Agent(size, this);
             agents.add(agent);
+            
             // Add the agent "body" to the world pane (main display).
             getWorldPane().getChildren().add(agent.getBody());
             
+            // Place in a random place.
             agent.getBody().setTranslateX(Utils.randomBetween(200, 400));
             agent.getBody().setTranslateY(Utils.randomBetween(200, 400));
         }
@@ -183,30 +179,40 @@ public abstract class SwarmWorld implements IAgentWorld, ICellWorld{
             agent.setInertia(getInertia()/100);
             agent.setInfluence(getInfluence()/100);
             
-            // Live my minions!
+            // Live minions!
             agent.act();
         }
         // Update how much space has been filled.
 //        updateFilledSpace(swarmGrid.getFilledPercentage());
     }
     
+    /** Update every cell.
+     * Each cell can "act" depending on the state they have, for example if a cell represents 
+     * pheromones then it should evaporate each iteration. If a cell represents a wall then it 
+     * shouldn't do anything.
+     */
     private void updateCells(){
-        for (int i = 0; i < cells.length; i++) {
-            for (int j = 0; j < cells[i].length; j++) {
+        for (int i = 0; i < cells.length; i++)
+            for (int j = 0; j < cells[i].length; j++)
                 cells[i][j].act();
-            }
-        }
     }
     
-//    private void updatePheromones() {
-//        for (GridCell cell : swarmGrid.getPheromoneCells())
-//            cell.act();
-//    }
-//    
-//    private void updateLeaks(){
-//        for (GridCell cell : swarmGrid.getLeakCells())
-//            cell.act();
-//    }
+    private ArrayList<GridCell> getCellsInArea(Circle area){
+        ArrayList<GridCell> arrCells = new ArrayList<>();
+        
+        int x = (int)((area.getCenterX()-area.getRadius())/GridCell.CELL_SIZE);
+        int y = (int)((area.getCenterY()-area.getRadius())/GridCell.CELL_SIZE);
+        int width = (int)((area.getRadius()*2)/GridCell.CELL_SIZE);
+        
+        for (int i = x; (i <= width+x) && (i < cells.length); i++) {
+            for (int j = y; (j <= width+y) && (j < cells[i].length); j++) {
+                if ( Utils.collides(area, cells[i][j].collisionBounds()) )
+                    arrCells.add(cells[i][j]);
+            }
+        }
+        
+        return arrCells;
+    }
     
     /** Checks whether the bounds of the agent collide or not with a wall.
      * At first it would iterate through all those cell with the "wall" state but 
@@ -215,18 +221,11 @@ public abstract class SwarmWorld implements IAgentWorld, ICellWorld{
      * @param agentBounds Collision bounds of the agent.
      * @return true if collides, false otherwise. */
     private boolean collidesWithWall(Circle agentBounds){
-//        GridCell[][] cells = swarmGrid.getCells();
-        int x = (int)((agentBounds.getCenterX()-agentBounds.getRadius())/SwarmGrid.CELL_SIZE);
-        int y = (int)((agentBounds.getCenterY()-agentBounds.getRadius())/SwarmGrid.CELL_SIZE);
-        int width = (int)((agentBounds.getRadius()*2)/SwarmGrid.CELL_SIZE);
+        ArrayList<GridCell> arrCells = getCellsInArea(agentBounds);
         
-        for (int i = x; (i <= width+x) && (i < cells.length); i++) {
-            for (int j = y; (j <= width+y) && (j < cells[i].length); j++) {
-                GridCell cell = cells[i][j];
-                if (cell.isWall() && Utils.collides(agentBounds, cell.collisionBounds()) ){
-                    return true;
-                }
-            }
+        for (GridCell gridCell : arrCells) {
+            if (gridCell.isWall())
+                return true;
         }
         
         return false;
@@ -238,13 +237,12 @@ public abstract class SwarmWorld implements IAgentWorld, ICellWorld{
     }
     
     protected void showHideGrid(){
-//        swarmGrid.setVisibility(displayGrid());
         gridGroup.setVisible(displayGrid());
     }
     
     public GridCell getCellAt(Point2D pos){
-        int x = (int)(pos.getX()/CELL_SIZE);
-        int y = (int)(pos.getY()/CELL_SIZE);
+        int x = (int)(pos.getX()/GridCell.CELL_SIZE);
+        int y = (int)(pos.getY()/GridCell.CELL_SIZE);
         
         try {
             return cells[x][y];
@@ -254,7 +252,7 @@ public abstract class SwarmWorld implements IAgentWorld, ICellWorld{
         }
     }
     
-    protected void addRemoveBrick(Point2D pos, boolean add){
+    protected void addRemoveWallAt(Point2D pos, boolean add){
         GridCell cell = getCellAt(pos);
         if (cell != null)
             if (add)
@@ -263,7 +261,7 @@ public abstract class SwarmWorld implements IAgentWorld, ICellWorld{
                 cell.setState(GridCell.BLANK);
     }
     
-    protected void addLeakage(Point2D pos){
+    protected void addLeakAt(Point2D pos){
         GridCell cell = getCellAt(pos);
         if (cell != null && !cell.isWall()){
             cell.setState(GridCell.LEAK);
@@ -272,11 +270,12 @@ public abstract class SwarmWorld implements IAgentWorld, ICellWorld{
     }
     
     protected boolean isWall(Point2D pos){
-        return getCellAt(pos).isWall();
-    }
-    
-    private void setGameLoop(Timeline loop) {
-        this.swarmLoop = loop;
+        GridCell cell = getCellAt(pos);
+        
+        if (cell != null)
+            return getCellAt(pos).isWall();
+        
+        return false;
     }
     
     protected void saveWorlds(){
@@ -288,6 +287,9 @@ public abstract class SwarmWorld implements IAgentWorld, ICellWorld{
 //        Utils.saveWorlds(worlds);
     }
     
+    /** Get existing worlds. 
+     * If the worlds hasn't been loaded then load them from the "worlds.txt" file.
+     */
     protected ArrayList<World> getWorlds(){
         if (this.worlds == null){
             this.worlds = Utils.loadWorlds();
@@ -297,14 +299,135 @@ public abstract class SwarmWorld implements IAgentWorld, ICellWorld{
         return worlds;
     }
     
+    /** Load the selected world into the screen. */
     private void loadSelectedWorld(){
         World w = getSelectedWorld();
         if (w != null){
             for (GridCell gridCell : w.getWallCells()) {
-                addRemoveBrick(gridCell.getPosition(), true);
+                addRemoveWallAt(gridCell.getPosition(), true);
             }
         }
     }
+    
+    @Override
+    public ArrayList<Agent> getAgents() {
+        return agents;
+    }
+
+    @Override
+    public boolean isAllowed(Circle area){
+        double x = area.getCenterX();
+        double y = area.getCenterY();
+        
+        // Whether the point is within the boundaries of the world pane or not.
+        // For some reason the inbuild method .contains() did not give the expected result.
+        // The condition takes into account the size of the agents.
+        return (x - area.getRadius() > 0 
+                && x + area.getRadius() < getWorldPane().getWidth() 
+                && y - area.getRadius() > 0 
+                && y + area.getRadius() < getWorldPane().getHeight()
+                && !collidesWithWall(area));
+    }
+    
+    @Override
+    public void dropPheromones(Circle area, double pher){
+        // Drop pheromones (or cleaning product) over the following cells...
+        for (GridCell cell : getCellsInArea(area)) {
+            // if the cell is contaminatedd (leak) then
+            if (cell.isLeak()){
+                double diff = pher - cell.getAmount();
+                
+                // clean it (asuming the amount of pheronomes been dropped can remove the same 
+                // amount of leaked product.
+                cell.addAmount(-pher);
+                
+                // If the amount of leakage is now lower than cero then it means it's clean...
+                if (cell.getAmount() <= 0){
+                    // transform the cell into pheromone.
+                    cell.setState(GridCell.PHERMONE);
+                    // and add the extra amount.
+                    cell.setAmount(diff);
+                }
+            }
+            else {
+                // make the cell a pheromone (in case it's blank)
+                cell.setState(GridCell.PHERMONE);
+                cell.addAmount(pher);
+            }
+        }
+        
+    }
+    
+    @Override
+    public double pheromoneLevelAt(Circle area){
+        double pher = 0.0;
+        int cellCount = 0;
+        
+        for (GridCell cell : getCellsInArea(area)) {
+            if (!cell.isLeak())
+                pher += cell.getAmount();
+            cellCount ++;
+        }
+        
+        return (pher / cellCount);
+    }
+    
+    @Override
+    public double leakageLevelAt(Circle area){
+        double leak = 0.0;
+        int cellCount = 0;
+        
+        for (GridCell cell : getCellsInArea(area)) {
+            if (cell.isLeak())
+                leak += cell.getAmount();
+            cellCount ++;
+        }
+        
+        return (leak / cellCount);
+    }
+    
+    @Override
+    public void spread(Circle area, double amount) {
+        GridCell core = getCellAt( new Point2D(area.getCenterX(), area.getCenterY()) );
+        ArrayList<GridCell> arrCells = new ArrayList<>();
+        
+        // Reduce those cells in the area to those in the area which are not a wall.
+        for (GridCell cell : getCellsInArea(area)) {
+            if (!cell.isWall() && cell != core)
+                arrCells.add(cell);
+        }
+        
+        // Get the amount to be shared among those cells.
+        double share = amount/arrCells.size();
+        
+        for (GridCell cell : arrCells) {
+            // If a leak is been spread then...
+            if (core.isLeak()){
+                if (!cell.isLeak()){
+                    cell.setAmount(share);
+                }else
+                    cell.addAmount(share);
+                
+                cell.setState(GridCell.LEAK);
+            }
+            // else pheromones are been spread.
+            else if (!cell.isLeak()){
+                if (!cell.isPheromone())
+                    cell.setAmount(amount);
+                else
+                    cell.addAmount(share);
+                
+                cell.setState(GridCell.PHERMONE);
+            }
+        }
+    }
+
+    @Override
+    public double evaporationRate(){
+        return getEvaporation()/100;
+    }
+    
+    // ====== Methods to be implemented by the controller ===================
     
     protected abstract Pane getWorldPane();
     
@@ -338,157 +461,5 @@ public abstract class SwarmWorld implements IAgentWorld, ICellWorld{
     
     protected abstract World getSelectedWorld();
     
-    protected boolean isRunning(){
-        return running;
-    }
-
-    @Override
-    public ArrayList<Agent> getAgents() {
-        return agents;
-    }
-
-    @Override
-    public boolean isAllowed(Circle area){
-        double x = area.getCenterX();
-        double y = area.getCenterY();
-        
-        // Whether the point is within the boundaries of the world pane or not.
-        // For some reason the inbuild method .contains() did not give the expected result.
-        // The condition takes into account the size of the agents.
-        return (x - area.getRadius() > 0 
-                && x + area.getRadius() < getWorldPane().getWidth() 
-                && y - area.getRadius() > 0 
-                && y + area.getRadius() < getWorldPane().getHeight()
-                && !collidesWithWall(area));
-    }
-    
-    @Override
-    public void dropPheromones(Circle area, double pher){
-        int x = (int)((area.getCenterX()-area.getRadius())/CELL_SIZE);
-        int y = (int)((area.getCenterY()-area.getRadius())/CELL_SIZE);
-        int width = (int)((area.getRadius()*2)/CELL_SIZE);
-        
-        for (int i = x; (i <= width+x) && (i < cells.length); i++) {
-            for (int j = y; (j <= width+y) && (j < cells[i].length); j++) {
-                GridCell cell = cells[i][j];
-                if ( Utils.collides(area, cell.collisionBounds()) ){
-                    
-                    if (cell.isLeak()){
-                        double diff = pher - cell.getAmount();
-                        cell.addAmount(-pher);
-                        if (cell.getAmount() <= 0){
-                            cell.setState(GridCell.PHERMONE);
-                            cell.setAmount(diff);
-                        }
-                    }
-                    else {
-                        cell.setState(GridCell.PHERMONE);
-                        cell.addAmount(pher);
-                    }
-                    
-                }
-            }
-        }
-    }
-    
-    @Override
-    public double pheromoneLevelAt(Circle area){
-        double pher = 0.0;
-        int cellCount = 0;
-        
-        int x = (int)((area.getCenterX()-area.getRadius())/SwarmGrid.CELL_SIZE);
-        int y = (int)((area.getCenterY()-area.getRadius())/SwarmGrid.CELL_SIZE);
-        int width = (int)((area.getRadius()*2)/SwarmGrid.CELL_SIZE);
-        
-        for (int i = x; (i <= width+x) && (i < cells.length) && (i >= 0); i++) {
-            for (int j = y; (j <= width+y) && (j < cells[i].length)  && (j >= 0); j++) {
-                GridCell cell = cells[i][j];
-                if ( Utils.collides(area, cell.collisionBounds()) ){
-                    if (!cell.isLeak())
-                        pher += cell.getAmount();
-                    cellCount ++;
-                }
-            }
-        }
-        
-        return (pher / cellCount);
-    }
-    
-    @Override
-    public double leakageLevelAt(Circle area){
-        double leak = 0.0;
-        int cellCount = 0;
-        
-        int x = (int)((area.getCenterX()-area.getRadius())/SwarmGrid.CELL_SIZE);
-        int y = (int)((area.getCenterY()-area.getRadius())/SwarmGrid.CELL_SIZE);
-        int width = (int)((area.getRadius()*2)/SwarmGrid.CELL_SIZE);
-        
-        for (int i = x; (i <= width+x) && (i < cells.length) && (i >= 0); i++) {
-            for (int j = y; (j <= width+y) && (j < cells[i].length)  && (j >= 0); j++) {
-                GridCell cell = cells[i][j];
-                if ( Utils.collides(area, cell.collisionBounds()) ){
-                    if (cell.isLeak())
-                        leak += cell.getAmount();
-                    cellCount ++;
-                }
-            }
-        }
-        if (cellCount <= 0)
-            return 0.0;
-        
-        return (leak / cellCount);
-    }
-    
-    @Override
-    public void spread(Point2D pos, double amount) {
-        ArrayList<GridCell> neighbours = new ArrayList<>();
-        
-        int x = (int)(pos.getX()/CELL_SIZE);
-        int y = (int)(pos.getY()/CELL_SIZE);
-        
-        if (x > 0){
-            if (!cells[x-1][y].isWall()) neighbours.add(cells[x-1][y]);
-            if (y > 0)
-                if (!cells[x-1][y-1].isWall()) neighbours.add(cells[x-1][y-1]);
-            if (y < cells[x].length-1)
-                if (!cells[x-1][y+1].isWall()) neighbours.add(cells[x-1][y+1]);
-        }
-        if (x < cells.length-1){
-            if (!cells[x+1][y].isWall()) neighbours.add(cells[x+1][y]);
-            if (y < cells[x].length-1)
-                if (!cells[x+1][y+1].isWall()) neighbours.add(cells[x+1][y+1]);
-            if (y > 0)
-                if (!cells[x+1][y-1].isWall()) neighbours.add(cells[x+1][y-1]);
-        }
-        if (y > 0)
-            if (!cells[x][y-1].isWall()) neighbours.add(cells[x][y-1]);
-        if (y < cells[x].length-1)
-            if (!cells[x][y+1].isWall()) neighbours.add(cells[x][y+1]);
-        
-        double share = amount/neighbours.size();
-        
-        for (GridCell neighbour : neighbours) {
-            if (cells[x][y].isLeak()){
-                if (!neighbour.isLeak()){
-                    neighbour.setAmount(share);
-                }else
-                    neighbour.addAmount(share);
-                
-                neighbour.setState(GridCell.LEAK);
-            }
-            else if (!neighbour.isLeak()){
-                if (!neighbour.isPheromone())
-                    neighbour.setAmount(amount);
-                else
-                    neighbour.addAmount(share);
-                
-                neighbour.setState(GridCell.PHERMONE);
-            }
-        }
-    }
-
-    @Override
-    public double evaporationRate(){
-        return getEvaporation()/100;
-    }
+    // ====================================================================
 }

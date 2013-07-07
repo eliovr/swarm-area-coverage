@@ -226,7 +226,7 @@ public class SwarmWorldController extends SwarmWorld implements Initializable{
     private void onMousePressed(MouseEvent event) {
         if (!isRunning()){
             cellUnderMouse = isWall(new Point2D(event.getX(), event.getY()));
-            addRemoveBrick(new Point2D(event.getX(), event.getY()), cellUnderMouse);
+            addRemoveWallAt(new Point2D(event.getX(), event.getY()), cellUnderMouse);
         }
     }
     
@@ -235,15 +235,15 @@ public class SwarmWorldController extends SwarmWorld implements Initializable{
         Point2D pos = new Point2D(event.getX(), event.getY());
         
         if (!isRunning())
-            addRemoveBrick(pos, !cellUnderMouse);
+            addRemoveWallAt(pos, !cellUnderMouse);
         else
-            addLeakage(pos);
+            addLeakAt(pos);
     }
     
     @FXML
     private void onMouseDragged(MouseEvent event) {
         if (!isRunning())
-            addRemoveBrick(new Point2D(event.getX(), event.getY()), !cellUnderMouse);
+            addRemoveWallAt(new Point2D(event.getX(), event.getY()), !cellUnderMouse);
     }
     
 //    @FXML

@@ -19,9 +19,9 @@ public class GridCell extends Atom{
     
     public static final byte BLANK = 0, PHERMONE = 1, WALL = 2, LEAK = 3;
     
-    private Node cell;
+    public static final int CELL_SIZE = 5;
     
-    private double size;
+    private Node cell;
     
     private byte state;
     
@@ -32,7 +32,6 @@ public class GridCell extends Atom{
     private ICellWorld world;
     
     public GridCell(double size, Point2D position, ICellWorld world){
-        this.size = size;
         this.position = position;
         this.cell = Utils.drawRectangle(position, size);
         this.amount = 0.0;
@@ -50,7 +49,7 @@ public class GridCell extends Atom{
             case LEAK:
                 double extra = amount - 1.0;
                 if (extra > 1.0){
-                    world.spread(position, extra);
+                    world.spread(neigbourhoodArea(), extra);
                     amount = 1.0;
                 }
                 cell.setOpacity(amount);
@@ -61,8 +60,16 @@ public class GridCell extends Atom{
     
     @Override
     public Circle collisionBounds(){
-        double radious = size/2;
-        return Utils.drawCircle(new Point2D(getPosition().getX()+radious, getPosition().getY()+radious), radious);
+        double radious = CELL_SIZE/2;
+        return Utils.drawCircle(new Point2D(position.getX()+radious, position.getY()+radious), radious);
+    }
+    
+    private Circle neigbourhoodArea(){
+        double radious = CELL_SIZE;
+        double centerX = (CELL_SIZE/2) + position.getX();
+        double centerY = (CELL_SIZE/2) + position.getY();
+        
+        return Utils.drawCircle(new Point2D(centerX, centerY), radious);
     }
     
     public Node getCell() {
@@ -118,29 +125,6 @@ public class GridCell extends Atom{
         this.amount = this.amount < 0 ? 0 : this.amount;
         cell.setOpacity(amount);
     }
-    
-//    public double getPheromone(){
-//        return cell.getOpacity();
-//    }
-    
-    /** Adds pheromone to the cell
-     * @param opacity Pheromone or leakage quantity to be added to the cell. 
-     * Should be a number between 0 and 1 (exclusive).
-     */
-//    public void addOpacity(double opacity){
-//        cell.setOpacity(cell.getOpacity() + opacity);
-//    }
-    
-    /** Diminish the amount of pheromone in the cell.
-     * @param er Represents the evaporation rate (percentage of pheromone that is to fade). 
-     * Must be a number between 0 and 1.
-     */
-//    public void evaporatePheromone(double er){
-//        if ( isPheromone() ){
-//            double pher = (1.0 - er) * cell.getOpacity();
-//            cell.setOpacity(pher);
-//        }
-//    }
     
     public JSONObject toJSON(){
         JSONObject obj = new JSONObject();

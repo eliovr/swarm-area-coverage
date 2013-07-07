@@ -218,7 +218,7 @@ public class Utils {
 
                 for (Iterator iCells = jWallCells.iterator(); iCells.hasNext();) {
                     JSONObject jCell = (JSONObject)iCells.next();
-                    world.getWallCells().add(new GridCell(SwarmGrid.CELL_SIZE, new Point2D((double)jCell.get("x"), (double)jCell.get("y")), null));
+                    world.getWallCells().add(new GridCell(GridCell.CELL_SIZE, new Point2D((double)jCell.get("x"), (double)jCell.get("y")), null));
                 }
                 worlds.add(world);
             }

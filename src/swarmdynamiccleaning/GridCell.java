@@ -19,6 +19,8 @@ public class GridCell extends Atom{
     
     public static final byte BLANK = 0, PHERMONE = 1, WALL = 2, LEAK = 3;
     
+    private static final double MINPHER = 0.0;
+    
     public static final int CELL_SIZE = 5;
     
     private Rectangle cell;
@@ -47,18 +49,20 @@ public class GridCell extends Atom{
         switch (this.state){
             case PHERMONE:
                 amount = (1.0 - world.evaporationRate()) * amount;
+                
+                if (amount < MINPHER)
+                    amount = MINPHER;
+                
                 cell.setOpacity(amount);
                 break;
             case LEAK:
                 double extra = amount - 1.0;
-                if (extra > 1.0){
+                if (extra > 0.0){
                     world.spread(neigbourhoodArea(), extra);
                     amount = 1.0;
                 }
-                cell.setOpacity(amount);
                 break;
         }
-        
     }
     
     @Override
@@ -114,8 +118,13 @@ public class GridCell extends Atom{
         }
     }
     
-    public double getAmount(){
-        return this.amount;
+    /** Gives the percentage of whatever it has (leak or pheromones).
+     * Percentage levels are between 0 and 1 regardless of whether the amount is 
+     * greater than 1 or lower than 0, and that's why we use the cell opacity which, 
+     * for our convenience, will always be between 0 and 1.
+     */
+    public double getAmountPercentage(){
+        return cell.getOpacity();
     }
     
     public void setAmount(double amount){
@@ -125,8 +134,21 @@ public class GridCell extends Atom{
     
     public void addAmount(double amount){
         this.amount += amount;
-        this.amount = this.amount < 0 ? 0 : this.amount;
-        cell.setOpacity(amount);
+        cell.setOpacity(this.amount);
+    }
+    
+    /** Subtracts the given amount from the current amount.
+     * If the result is lower than 0 then it transforms the cell into a pheromone (assuming it's leak),
+     * and sets the absolute value of the result into the amount. In other words, if
+     * the "cleaning product" is more than the "contamination" then what remains is the former.
+     */
+    public void cleanAmount(double amount){
+        this.amount -= amount;
+        if (this.amount < 0){
+            setState(PHERMONE);
+            this.amount = Math.abs(this.amount);
+        }
+        cell.setOpacity(this.amount);    
     }
     
     public JSONObject toJSON(){

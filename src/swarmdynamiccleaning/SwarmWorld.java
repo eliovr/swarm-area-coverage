@@ -45,8 +45,10 @@ public abstract class SwarmWorld implements IAgentWorld, ICellWorld{
     private boolean running;
     // List of worlds that are loaded from the "worlds.txt" file and can be displayed.
     private ArrayList<World> worlds;
-    
-    private int filledCells;
+    // Number of cells that have been visited by agents.
+    private int visitedCells;
+    // Number of cells that are walls (used to calculate the filled percentage).
+    private int wallCells;
     
     /** Starts the game.
      * Initializes elements if ran for the first time. No need to call anything else 
@@ -117,7 +119,8 @@ public abstract class SwarmWorld implements IAgentWorld, ICellWorld{
         initAgents();
         
         iterations = 0;
-        filledCells = 0;
+        visitedCells = 0;
+        wallCells = 0;
     }
     
     /** Here is initialized the main loop of the game. 
@@ -137,6 +140,10 @@ public abstract class SwarmWorld implements IAgentWorld, ICellWorld{
                     updateCells();
                     
                     updateExecutedFrames(++iterations);
+                    
+                    // Update how much space has been filled.
+                    int filledPercentage = (visitedCells * 100) / ((cells.length * cells[0].length)-wallCells);
+                    updateFilledSpace(filledPercentage);
                     
 //                    time = Calendar.getInstance().getTimeInMillis() - time;
 //                    System.out.println("Time: " + time);
@@ -187,11 +194,6 @@ public abstract class SwarmWorld implements IAgentWorld, ICellWorld{
             // Live minions!
             agent.act();
         }
-        
-        int filledPercentage = (filledCells * 100) / (cells.length * cells[0].length);
-        
-        // Update how much space has been filled.
-        updateFilledSpace(filledPercentage);
     }
     
     /** Update every cell.
@@ -263,10 +265,14 @@ public abstract class SwarmWorld implements IAgentWorld, ICellWorld{
     protected void addRemoveWallAt(Point2D pos, boolean add){
         GridCell cell = getCellAt(pos);
         if (cell != null)
-            if (add)
+            if (add && !cell.isWall()){
+                wallCells++;
                 cell.setState(GridCell.WALL);
-            else
+            }
+            else if (cell.isWall()){
+                wallCells--;
                 cell.setState(GridCell.BLANK);
+            }
     }
     
     protected void addLeakAt(Point2D pos){
@@ -311,6 +317,7 @@ public abstract class SwarmWorld implements IAgentWorld, ICellWorld{
     private void loadSelectedWorld(){
         World w = getSelectedWorld();
         if (w != null){
+//            wallCells = w.getWallCells().size();
             for (GridCell gridCell : w.getWallCells()) {
                 addRemoveWallAt(gridCell.getPosition(), true);
             }
@@ -344,24 +351,14 @@ public abstract class SwarmWorld implements IAgentWorld, ICellWorld{
             
             if (!cell.isVisited()){
                 cell.setVisited(true);
-                filledCells++;
+                visitedCells++;
             }
             
             // if the cell is contaminatedd (leak) then
             if (cell.isLeak()){
-                double diff = pher - cell.getAmount();
-                
-                // clean it (asuming the amount of pheronomes been dropped can remove the same 
-                // amount of leaked product.
-                cell.addAmount(-pher);
-                
-                // If the amount of leakage is now lower than cero then it means it's clean...
-                if (cell.getAmount() <= 0){
-                    // transform the cell into pheromone.
-                    cell.setState(GridCell.PHERMONE);
-                    // and add the extra amount.
-                    cell.setAmount(diff);
-                }
+                // clean it. The leaked cell will beacome a phermone cell if the 
+                // amount of pheromones being placed is greater than the amount of leak in it.
+                cell.cleanAmount(pher);
             }
             else {
                 // make the cell a pheromone (in case it's blank)
@@ -369,7 +366,6 @@ public abstract class SwarmWorld implements IAgentWorld, ICellWorld{
                 cell.addAmount(pher);
             }
         }
-        
     }
     
     @Override
@@ -378,8 +374,8 @@ public abstract class SwarmWorld implements IAgentWorld, ICellWorld{
         int cellCount = 0;
         
         for (GridCell cell : getCellsInArea(area)) {
-            if (!cell.isLeak())
-                pher += cell.getAmount();
+            if (cell.isPheromone())
+                pher += cell.getAmountPercentage();
             cellCount ++;
         }
         
@@ -393,7 +389,7 @@ public abstract class SwarmWorld implements IAgentWorld, ICellWorld{
         
         for (GridCell cell : getCellsInArea(area)) {
             if (cell.isLeak())
-                leak += cell.getAmount();
+                leak += cell.getAmountPercentage();
             cellCount ++;
         }
         

@@ -226,7 +226,7 @@ public class SwarmWorldController extends SwarmWorld implements Initializable{
     private void onMousePressed(MouseEvent event) {
         if (!isRunning()){
             cellUnderMouse = isWall(new Point2D(event.getX(), event.getY()));
-            addRemoveWallAt(new Point2D(event.getX(), event.getY()), cellUnderMouse);
+            addRemoveWallAt(new Point2D(event.getX(), event.getY()), !cellUnderMouse);
         }
     }
     

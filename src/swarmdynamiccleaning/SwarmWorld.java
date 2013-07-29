@@ -269,7 +269,7 @@ public abstract class SwarmWorld implements IAgentWorld, ICellWorld{
                 wallCells++;
                 cell.setState(GridCell.WALL);
             }
-            else if (cell.isWall()){
+            else if (!add && cell.isWall()){
                 wallCells--;
                 cell.setState(GridCell.BLANK);
             }

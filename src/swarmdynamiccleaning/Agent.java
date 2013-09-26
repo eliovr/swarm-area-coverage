@@ -116,7 +116,7 @@ public class Agent extends Atom{
             // 2. Plus a percentage of the confidence of the most confident agent.
             // 3. Just being able to move gives me plus 10% confidence.
             confidence = 
-                    ( 1.0 - world.pheromoneLevelAt(collisionBounds()) )+// * 0.3 +
+                    ( 1.0 - world.pheromoneLevelAt(Utils.drawCircle(newPos, getPersonalRange())) )+// * 0.3 +
 //                    ( world.leakageLevelAt(collisionBounds()) ) +// * 0.6 +
                     ( mostConfident.getConfidence() * influence ) +
                     0.1;

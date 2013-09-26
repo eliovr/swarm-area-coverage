@@ -214,6 +214,9 @@ public abstract class SwarmWorld implements IAgentWorld, ICellWorld{
         int y = (int)((area.getCenterY()-area.getRadius())/GridCell.CELL_SIZE);
         int width = (int)((area.getRadius()*2)/GridCell.CELL_SIZE);
         
+        x = x >= 0? x : 0;
+        y = y >= 0? y : 0;
+        
         for (int i = x; (i <= width+x) && (i < cells.length); i++) {
             for (int j = y; (j <= width+y) && (j < cells[i].length); j++) {
                 if ( Utils.collides(area, cells[i][j].collisionBounds()) )

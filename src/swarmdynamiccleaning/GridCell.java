@@ -19,7 +19,7 @@ public class GridCell extends Atom{
     
     public static final byte BLANK = 0, PHERMONE = 1, WALL = 2, LEAK = 3;
     
-    private static final double MINPHER = 0.0;
+    private static final double MIN_OPACITY = 0.2;
     
     public static final int CELL_SIZE = 5;
     
@@ -48,12 +48,14 @@ public class GridCell extends Atom{
     public void act(){
         switch (this.state){
             case PHERMONE:
-                amount = (1.0 - world.evaporationRate()) * amount;
-                
-                if (amount < MINPHER)
-                    amount = MINPHER;
-                
-                cell.setOpacity(amount);
+                if (visited && amount > 0){
+                    amount = (1.0 - world.evaporationRate()) * amount;
+//                    amount = amount - world.evaporationRate() ;
+//                    
+//                    if (amount < 0) amount = 0;
+                    
+                    cell.setOpacity(amount > MIN_OPACITY? amount : MIN_OPACITY);
+                }
                 break;
             case LEAK:
                 double extra = amount - 1.0;
@@ -109,6 +111,8 @@ public class GridCell extends Atom{
                 break;
             case BLANK:
                 cell.setOpacity(0.0);
+                amount = 0.0;
+                break;
             case PHERMONE:
                 cell.setFill(Color.LIGHTSEAGREEN);
                 break;
@@ -124,7 +128,8 @@ public class GridCell extends Atom{
      * for our convenience, will always be between 0 and 1.
      */
     public double getAmountPercentage(){
-        return cell.getOpacity();
+//        return cell.getOpacity();
+        return amount < 1.0? amount : 1.0;
     }
     
     public void setAmount(double amount){

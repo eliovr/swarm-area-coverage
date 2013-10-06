@@ -98,7 +98,7 @@ public abstract class SwarmWorld implements IAgentWorld, ICellWorld{
         if (this.cells == null)
             this.cells = new GridCell[ (int)(getWorldPane().getWidth()/GridCell.CELL_SIZE) ][ (int)(getWorldPane().getHeight()/GridCell.CELL_SIZE) ];
         
-        // Instantiate or resent each one of the cells.
+        // Instantiate or reset each one of the cells.
         for (int i = 0; i < cells.length; i++) {
             for (int j = 0; j < cells[i].length; j++) {
                 if (cells[i][j] == null){
@@ -135,16 +135,16 @@ public abstract class SwarmWorld implements IAgentWorld, ICellWorld{
             public void handle(Event t) {
 //                    long time = Calendar.getInstance().getTimeInMillis();
                     
-                    updateAgents();
- 
-                    updateCells();
-                    
-                    updateExecutedFrames(++iterations);
-                    
-                    // Update how much space has been filled.
-                    int filledPercentage = (visitedCells * 100) / ((cells.length * cells[0].length)-wallCells);
-                    updateFilledSpace(filledPercentage);
-                    
+                updateCells();    
+                
+                updateAgents();
+                
+                updateExecutedFrames(++iterations);
+
+                // Update how much space has been filled.
+                int filledPercentage = (visitedCells * 100) / ((cells.length * cells[0].length)-wallCells);
+                updateFilledSpace(filledPercentage);
+
 //                    time = Calendar.getInstance().getTimeInMillis() - time;
 //                    System.out.println("Time: " + time);
             }
@@ -365,7 +365,8 @@ public abstract class SwarmWorld implements IAgentWorld, ICellWorld{
             }
             else {
                 // make the cell a pheromone (in case it's blank)
-                cell.setState(GridCell.PHERMONE);
+                if (cell.getAmountPercentage() <= 0)
+                    cell.setState(GridCell.PHERMONE);
                 cell.addAmount(pher);
             }
         }
@@ -424,14 +425,14 @@ public abstract class SwarmWorld implements IAgentWorld, ICellWorld{
                 cell.setState(GridCell.LEAK);
             }
             // else pheromones are been spread.
-            else if (!cell.isLeak()){
-                if (!cell.isPheromone())
-                    cell.setAmount(amount);
-                else
-                    cell.addAmount(share);
-                
-                cell.setState(GridCell.PHERMONE);
-            }
+//            else if (!cell.isLeak()){
+//                if (!cell.isPheromone())
+//                    cell.setAmount(amount);
+//                else
+//                    cell.addAmount(share);
+//                
+//                cell.setState(GridCell.PHERMONE);
+//            }
         }
     }
 

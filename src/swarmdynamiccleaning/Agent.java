@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package swarmdynamiccleaning;
 
 import javafx.geometry.Point2D;
@@ -11,38 +7,38 @@ import javafx.scene.shape.Circle;
 
 /**
  *
- * @author Elio A
+ * @author Elio Ventocilla
  */
 public class Agent extends Atom{
     private Circle body;
-    
+
     private double size;
-    
+
     private IAgentWorld world;
-    
+
     private double personalRange;
-    
+
     private double comfortRange;
-    
+
     private double flockRange;
-    
+
     private double stepSize;
-    
+
     private double pheromone;
-    
+
     private double confidence;
-    
+
     private double influence;
-    
+
     private double inertia;
-    
+
     private Point2D prevPos;
-    
+
     public Agent (double size, IAgentWorld world){
         this.size = size;
         this.body = Utils.drawCircle(null, size);
         this.world = world;
-        
+
         this.personalRange = 0.0;
         this.comfortRange = 0.0;
         this.flockRange = 0.0;
@@ -51,10 +47,10 @@ public class Agent extends Atom{
         this.confidence = 0.0;
         this.influence = 0.0;
         this.inertia = 0.0;
-        
+
         this.prevPos = null;
     }
-    
+
     @Override
     public void act(){
         Point2D newPos = getPosition();
@@ -62,7 +58,7 @@ public class Agent extends Atom{
         Agent mostConfident = this;
         // Leave a trace where I am before moving somewhere else.
         world.dropPheromones(collisionBounds(), pheromone);
-        
+
         for (Agent agent : world.getAgents()) {
             if (!agent.equals(this)){
                 // This way of measuring coallision only works between agents because
@@ -85,7 +81,7 @@ public class Agent extends Atom{
                 }
             }
         }
-        
+
         // If there's someone more confident than I am then...
         if (mostConfident != this){
             // ...move towards it.
@@ -97,25 +93,25 @@ public class Agent extends Atom{
             // ...just show the user I'm leading.
             body.setFill(Color.RED);
         }
-        
+
         // If I'm still at the same position (the newPos is the same as my current position) then...
         if (newPos.distance(getPosition()) <= 0)
             // ...move to a random position.
             newPos = Utils.randomPosFrom(getPosition(), stepSize);
-        
+
         newPos = applyInertia(newPos);
-        
+
         // If the new position is allowed by the rules of the world then...
         if (world.isAllowed(Utils.drawCircle(newPos, size))){
             // ...move to the new position...
             moveTo(newPos);
-            
+
             // ...and set my confidence.
             // Confidence is given by:
             // 1. How much % is without pheromones in the area covered by the agent.
             // 2. Plus a percentage of the confidence of the most confident agent.
             // 3. Just being able to move gives me plus 10% confidence.
-            confidence = 
+            confidence =
                     ( 1.0 - world.pheromoneLevelAt(Utils.drawCircle(newPos, getPersonalRange())) )+// * 0.3 +
 //                    ( world.leakageLevelAt(collisionBounds()) ) +// * 0.6 +
                     ( mostConfident.getConfidence() * influence ) +
@@ -127,18 +123,18 @@ public class Agent extends Atom{
             prevPos = null;
         }
     }
-    
+
     @Override
     public Circle collisionBounds(){
         return Utils.drawCircle(getPosition(), size);
     }
-    
+
     private void moveTo(Point2D pos){
         prevPos = getPosition();
         body.setTranslateX(pos.getX());
         body.setTranslateY(pos.getY());
     }
-    
+
     /** Returns a new position as the result of the agent striving to move towards the a new position
      * while being influenced by the direction of its last movement.
      * Inertia is given by the following:
@@ -155,17 +151,17 @@ public class Agent extends Atom{
         }
         return finalPos;
     }
-    
+
     public Node getBody() {
         return body;
     }
-    
+
     public Point2D getPosition(){
         return new Point2D(body.getTranslateX(), body.getTranslateY());
     }
-    
+
     // ====== Accesor methods that define the behaviour of the agent ===========
-    
+
     public void setPheromone(double pheromone) {
         this.pheromone = pheromone;
     }
@@ -189,15 +185,15 @@ public class Agent extends Atom{
     public void setInfluence(double influence) {
         this.influence = influence;
     }
-    
+
     public void setInertia(double inertia) {
         this.inertia = inertia;
     }
-    
+
     public void setConfidence(double confidence) {
         this.confidence = confidence;
     }
-    
+
     private double getPersonalRange() {
         return (size*2) + personalRange;
     }
@@ -209,11 +205,11 @@ public class Agent extends Atom{
     private double getFlockRange() {
         return this.getComfortRange() + flockRange;
     }
-    
+
     public double getConfidence() {
         return confidence;
     }
-    
+
     public double getInfluence() {
         return influence;
     }

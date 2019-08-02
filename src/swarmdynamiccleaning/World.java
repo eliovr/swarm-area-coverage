@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package swarmdynamiccleaning;
 
 import java.util.ArrayList;
@@ -10,18 +6,18 @@ import org.json.simple.JSONObject;
 
 /**
  *
- * @author Elio A
+ * @author Elio Ventocilla
  */
 public class World {
     private String name;
-    
+
     private ArrayList<GridCell> wallCells;
-    
+
     public World(String name){
         this.name = name;
         this.wallCells = new ArrayList<>();
     }
-    
+
     public World(String name, ArrayList<GridCell> wallCells){
         this.name = name;
         this.wallCells = wallCells;
@@ -54,11 +50,11 @@ public class World {
     public void setWallCells(ArrayList<GridCell> wallCells) {
         this.wallCells = wallCells;
     }
-    
+
     public JSONObject toJSON(){
         JSONObject obj = new JSONObject();
         JSONArray arr = new JSONArray();
-        
+
         obj.put("name", name);
         for (GridCell gridCell : wallCells) {
             arr.add(gridCell.toJSON());
@@ -66,7 +62,7 @@ public class World {
         obj.put("wallCells", arr);
         return obj;
     }
-    
+
     @Override
     public String toString(){
         return name;
